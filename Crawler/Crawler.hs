@@ -58,6 +58,9 @@ filterLinks baseUrl urls =
     not $ contains "/dtlrvwlst/" urlSub,
     not $ contains "shinnennkai" urlSub,
     not $ contains "/dtlkodawari/" urlSub,
+    not $ contains "/fan_" urlSub,
+    not $ contains "highdisplay" urlSub,
+    not $ contains "/map" urlSub,
     not $ contains "coupon" urlSub,
     matchRegex (mkRegex "dtlrvwlst/[0-9]") urlSub == Nothing
   ] --ここがメインフィルタ
