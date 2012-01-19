@@ -10,6 +10,7 @@ import qualified Data.Map as Map
 import Debug.Trace
 import System.IO (stdout, hFlush)
 import Text.Regex
+import Codec.Binary.UTF8.String (encodeString, decodeString)
 traceS a = trace $ show a
 
 convertUrlToFilename :: String -> String -> String
@@ -25,7 +26,7 @@ getLinks baseUrl url =
       (_, page) <- download url
       return page
     let (html, linkUrls) = (source page, links page)
-    writeFile filename html
+    writeFile filename $ decodeString html
     return $ fmap linkAddress linkUrls
   where filename = convertUrlToFilename baseUrl url
 
