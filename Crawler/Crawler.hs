@@ -44,6 +44,7 @@ filterLinks baseUrl urls =
     not $ contains "#" urlSub,  
     not $ contains "/kdwr" urlSub,  
     not $ contains "0/0/" urlSub,  
+    not $ contains "COND" urlSub,  
     not $ contains "new_open" urlSub,  
     not $ contains "photo" urlSub,  
     not $ contains "jpg" urlSub,  
