@@ -31,7 +31,7 @@ findShopPages :: String -> IO [String]
 findShopPages fileDir = do
   cs <- getDirectoryContents fileDir
   return [c|c<-cs,
-    matchRegex (mkRegex "t[A-Z][0-9]+_[A-Z][0-9]+_[0-9]+") c /= Nothing]
+    matchRegex (mkRegex "t[A-Z][0-9]+_[A-Z][0-9]+_[0-9]+_$") c /= Nothing]
 
 --ページを探索し、レビュワーのリストと（あれば）次ページを返す
 parsePageContents :: String -> IO (Maybe String)
@@ -50,27 +50,35 @@ crawlPage filename = do
 
 crawlPage' :: String -> IO ()
 crawlPage' url = do 
-  print url
+  hFlush stdout
+  print $ "url=" ++ url
   page <- runShpider $ do
     (_, page) <- download url
     return page
-  threadDelay 100000 --sleep 1sec
+  threadDelay 30000 --sleep 1sec
   let cs = source page
   let filename = convertUrlToFilename "http://r.tabelog.com/tokyo/" url
   print $ filename
   writeFile filename $ decodeString cs
   next <- parsePageContents cs
   case next of 
-    Just nextUrl -> crawlPage' $ "http://r.tabelog.com" ++ nextUrl
+    Just nextUrl -> 
+      if contains "http://r.tabelog.com" nextUrl
+        then crawlPage' $ nextUrl
+        else crawlPage' $ "http://r.tabelog.com" ++ nextUrl
     Nothing -> return ()
 
 crawl :: IO ()
 crawl = do
   shopPages <- findShopPages "r.tabelog/"
   print $ length shopPages
-  let pages = take 100 shopPages
+  let pages = shopPages -- take 100 shopPages
   mapM_ crawlPage pages
-  
+
+main = crawl
+{-
 main = do
-  let page = "tA1315_A131503_13058503/"
+  --let page = "tA1315_A131503_13058503/"   --25件
+  let page = "tA1302_A130204_13018162_" --160件
   crawlPage page
+-}
