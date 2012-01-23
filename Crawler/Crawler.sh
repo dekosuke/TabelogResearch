@@ -1,1 +1,1 @@
-wget -r -m -T 10 -t 5 -l 9 -w 1.5 -R jpg,png,gif,bmp,mov,mpg,jpeg,js,css -e robots=off http://r.tabelog.com
+wget -r -m -T 10 -t 5 -l 9 -w 0.5 -R jpg,png,gif,bmp,mov,mpg,jpeg,js,css -e robots=off -D r.tabelog.com/tokyo/* -X *COND* http://r.tabelog.com/tokyo
