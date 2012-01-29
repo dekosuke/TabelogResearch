@@ -4,7 +4,7 @@ import Control.Concurrent (threadDelay)
 import Data.Map ((!))
 import qualified Data.Map as Map
 import Data.List (sort)
-import Data.List.Utils (join, contains, replace) -- MissingH library
+import Data.List.Utils (join, contains, replace, split) -- MissingH library
 import System (getArgs)
 import qualified Data.Map as Map
 import Debug.Trace
@@ -15,7 +15,19 @@ import Codec.Binary.UTF8.String (encodeString, decodeString)
 import Text.HTML.TagSoup --HTMLパーズのライブラリ
 traceS a = trace $ show a
 
---レビューからユーザ名、昼のスコア、夜のスコアを返す
+--レビュー全体から店名(地域)、スコアを返す
+extractRestaurantInfo :: [Tag String] -> (String, String)
+extractRestaurantInfo tags = 
+  let props_tmp = sections (~== "<meta property=\"mixi:title\">") tags in 
+  case props_tmp of 
+    [] -> ("-","-")
+    _  ->
+      let attrs = tagAttribute $ props_tmp !! 0 !! 0 in
+      let keywords = snd (attrs !! 1) in
+      let user = (sections (~== "<span property=\"v:average\">") tags) !! 0 !! 1 in
+      (keywords, unTagText user)
+
+--レビューの一部からユーザ名、昼のスコア、夜のスコアを返す
 extractScore :: [Tag String] -> (String, String, String)
 extractScore wrap = 
   let user = (filter isTagOpen (head $ sections (~== "<p class=\"reviewer-name\">") wrap)) !! 1 in
@@ -29,6 +41,7 @@ retrieveUser ss =
     Just as -> head as
 
 unTagText (TagText s) = s
+tagAttribute (TagOpen _ attrs) = attrs
 
 dayScore = tabeScore "<li class=\"ratings-lunch clearfix\">"
 nightScore = tabeScore "<li class=\"ratings-dinner clearfix\">"
@@ -42,10 +55,11 @@ tabeScore exp wrap =
 
 extractPage :: String -> IO ()
 extractPage filename = do
-  putStrLn filename
   cst <- readFile filename
   let cs = encodeString cst
   let tags = parseTags cs
+  let (shop, score) = extractRestaurantInfo tags
+  putStrLn $ "@" ++ filename ++ "," ++ decodeString shop ++ ","  ++ score
   let ss = sections (~== "<span property=\"v:average\">") tags
   let wraps = partitions (~== "<div class=\"review-wrap\">") tags
   --let wrap_days = map (\w -> head $  partitions (~== "<li class=\"ratings-lunch clearfix\">") w) wraps
@@ -75,5 +89,4 @@ main = do
   fs <- findReviewPages "../data/r.tabelog/"
   --print $ head fs
   mapM_ extractPage fs
-
 
